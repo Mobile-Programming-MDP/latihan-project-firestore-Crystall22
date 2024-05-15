@@ -4,6 +4,7 @@ class Note {
   String? id;
   final String title;
   final String description;
+  String? imageUrl;
   Timestamp? createdAt;
   Timestamp? updatedAt;
 
@@ -11,6 +12,7 @@ class Note {
     this.id,
     required this.title,
     required this.description,
+    this.imageUrl,
     this.createdAt,
     this.updatedAt,
   });
@@ -29,6 +31,7 @@ class Note {
   Map<String, dynamic> toDocument() {
     return {
       'title': title,
+      'imageUrl':imageUrl,
       'description': description,
       'created_at': createdAt,
       'updated_at': updatedAt,

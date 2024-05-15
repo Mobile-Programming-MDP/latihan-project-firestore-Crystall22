@@ -1,15 +1,48 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:notes/models/note.dart';
+import 'dart:io' as io;
+import 'package:path/path.dart' as path;
 
 class NoteService {
   static final FirebaseFirestore _database = FirebaseFirestore.instance;
   static final CollectionReference _notesCollection =
       _database.collection('notes');
 
+      static final FirebaseStorage _storage = FirebaseStorage.instance;
+  static Future<String?> uploadImage(XFile imagefile) async
+  {
+    try {
+    String fileName = path.basename(imagefile.path);
+    Reference ref = _storage.ref().child("images/$fileName");
+    UploadTask uploadTask;
+    if(kIsWeb)
+    {
+      uploadTask = ref.putData(await imagefile.readAsBytes());
+    }
+    else
+    {
+      uploadTask = ref.putFile(io.File(imagefile.path));
+    }
+
+    TaskSnapshot taskSnapshot = await uploadTask;
+    String downloadUrl = await taskSnapshot.ref.getDownloadURL();
+    return downloadUrl;
+    }catch (e){
+      
+        return null;
+      
+    }
+    
+  }
   static Future<void> addNote(Note note) async {
     Map<String, dynamic> newNote = {
       'title': note.title,
       'description': note.description,
+      'image_url' : note.imageUrl,
       'created_at': FieldValue.serverTimestamp(),
       'updated_at': FieldValue.serverTimestamp(),
     };
@@ -20,6 +53,7 @@ class NoteService {
     Map<String, dynamic> updatedNote = {
       'title': note.title,
       'description': note.description,
+      'image_url' : note.imageUrl,
       'created_at': note.createdAt,
       'updated_at': FieldValue.serverTimestamp(),
     };
@@ -43,6 +77,7 @@ class NoteService {
           id: doc.id,
           title: data['title'],
           description: data['description'],
+          imageUrl : data['imageUrl'],
           createdAt: data['created_at'] != null
               ? data['created_at'] as Timestamp
               : null,
