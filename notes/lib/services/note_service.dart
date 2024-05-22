@@ -12,37 +12,32 @@ class NoteService {
   static final CollectionReference _notesCollection =
       _database.collection('notes');
 
-      static final FirebaseStorage _storage = FirebaseStorage.instance;
-  static Future<String?> uploadImage(XFile imagefile) async
-  {
-    try {
-    String fileName = path.basename(imagefile.path);
-    Reference ref = _storage.ref().child("images/$fileName");
-    UploadTask uploadTask;
-    if(kIsWeb)
-    {
-      uploadTask = ref.putData(await imagefile.readAsBytes());
-    }
-    else
-    {
-      uploadTask = ref.putFile(io.File(imagefile.path));
-    }
+  static final FirebaseStorage _storage = FirebaseStorage.instance;
 
-    TaskSnapshot taskSnapshot = await uploadTask;
-    String downloadUrl = await taskSnapshot.ref.getDownloadURL();
-    return downloadUrl;
-    }catch (e){
-      
-        return null;
-      
+  static Future<String?> uploadImage(XFile imageFile) async {
+    try {
+      String fileName = path.basename(imageFile.path);
+      Reference ref = _storage.ref().child('images').child('/$fileName');
+      UploadTask uploadTask;
+      if (kIsWeb) {
+        uploadTask = ref.putData(await imageFile.readAsBytes());
+      } else {
+        uploadTask = ref.putFile(io.File(imageFile.path));
+      }
+
+      TaskSnapshot taskSnapshot = await uploadTask;
+      String downloadUrl = await taskSnapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      return null;
     }
-    
   }
+
   static Future<void> addNote(Note note) async {
     Map<String, dynamic> newNote = {
       'title': note.title,
       'description': note.description,
-      'image_url' : note.imageUrl,
+      'image_url': note.imageUrl,
       'created_at': FieldValue.serverTimestamp(),
       'updated_at': FieldValue.serverTimestamp(),
     };
@@ -53,7 +48,7 @@ class NoteService {
     Map<String, dynamic> updatedNote = {
       'title': note.title,
       'description': note.description,
-      'image_url' : note.imageUrl,
+      'image_url': note.imageUrl,
       'created_at': note.createdAt,
       'updated_at': FieldValue.serverTimestamp(),
     };
@@ -77,7 +72,7 @@ class NoteService {
           id: doc.id,
           title: data['title'],
           description: data['description'],
-          imageUrl : data['imageUrl'],
+          imageUrl: data['image_url'],
           createdAt: data['created_at'] != null
               ? data['created_at'] as Timestamp
               : null,
