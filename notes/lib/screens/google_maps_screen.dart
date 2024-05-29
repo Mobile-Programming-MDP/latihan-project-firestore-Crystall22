@@ -67,6 +67,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
           });
         },
       ),
+      
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _goToLocation,
         label: const Text("To Your Location"),
