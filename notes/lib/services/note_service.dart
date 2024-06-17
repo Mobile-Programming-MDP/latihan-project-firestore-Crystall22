@@ -12,16 +12,16 @@ class NoteService {
       _database.collection('notes');
   static final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  static Future<String?> uploadImage(XFile file) async {
+  static Future<String?> uploadImage(XFile imagefile) async {
     try {
-      String fileName = path.basename(file.path);
+      String fileName = path.basename(imagefile.path);
       Reference ref = _storage.ref().child('images').child('/${fileName}');
       UploadTask uploadTask;
 
       if (kIsWeb) {
-        uploadTask = ref.putData(await file.readAsBytes());
+        uploadTask = ref.putData(await imagefile.readAsBytes());
       } else {
-        uploadTask = ref.putFile(io.File(file.path));
+        uploadTask = ref.putFile(io.File(imagefile.path));
       }
 
       TaskSnapshot snapshot = await uploadTask;

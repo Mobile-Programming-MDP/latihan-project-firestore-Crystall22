@@ -1,11 +1,12 @@
-import 'dart:html';
 import 'package:flutter/material.dart';
 import 'package:notes/models/note.dart';
 import 'package:notes/screens/google_maps_screen.dart';
-import 'package:notes/screens/map_screen.dart';
 import 'package:notes/services/note_service.dart';
 import 'package:notes/widgets/note_dialog.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:provider/provider.dart';
+import 'theme_notifier.dart';
 
 class NoteListScreen extends StatefulWidget {
   const NoteListScreen({super.key});
@@ -20,6 +21,14 @@ class _NoteListScreenState extends State<NoteListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notes'),
+        actions: [
+          Switch(
+            value: Provider.of<ThemeNotifier>(context).darkTheme,
+            onChanged: (value) {
+              Provider.of<ThemeNotifier>(context, listen: false).toggleTheme();
+            },
+          ),
+        ],
       ),
       body: const NoteList(),
       floatingActionButton: FloatingActionButton(
@@ -103,7 +112,16 @@ class NoteList extends StatelessWidget {
                             padding: EdgeInsets.symmetric(vertical: 10),
                             child: Icon(Icons.delete),
                           ),
-                        )
+                        ),
+                        InkWell(
+                          onTap: () {
+                            _shareContent(context, document);
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 10),
+                            child: Icon(Icons.share),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -158,4 +176,13 @@ class NoteList extends StatelessWidget {
       },
     );
   }
+   void _shareContent(BuildContext context, Note document) {
+    final RenderBox box = context.findRenderObject() as RenderBox;
+    Share.share(
+      '${document.title}\n\n${document.description}',
+      subject: document.title,
+      sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size,
+    );
+  }
+  
 }

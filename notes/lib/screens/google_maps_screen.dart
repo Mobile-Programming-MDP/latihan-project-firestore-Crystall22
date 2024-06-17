@@ -1,8 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class GoogleMapScreen extends StatefulWidget {
@@ -42,7 +40,7 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
         ),
         infoWindow: const InfoWindow(
           title: 'Your Location',
-          snippet: 'yoour current location is here',
+          snippet: '...',
         ),
       ),
     );
@@ -67,7 +65,6 @@ class _GoogleMapScreenState extends State<GoogleMapScreen> {
           });
         },
       ),
-      
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _goToLocation,
         label: const Text("To Your Location"),

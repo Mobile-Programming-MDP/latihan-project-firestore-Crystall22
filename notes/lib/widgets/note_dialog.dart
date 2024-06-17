@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:notes/models/note.dart';
 import 'package:notes/services/location_service.dart';
 import 'package:notes/services/note_service.dart';
+import 'dart:io';
 
 class NoteDialog extends StatefulWidget {
   final Note? note;
@@ -39,6 +41,21 @@ class _NoteDialogState extends State<NoteDialog> {
       });
     }
   }
+
+  Future<void> _takePicture() async {
+     try {
+      final pickedFile = await ImagePicker().pickImage(source: ImageSource.camera);
+      if (pickedFile != null) {
+        setState(() {
+          _imageFile = pickedFile;
+        });
+      }
+    } catch (e) {
+      print("Error taking picture: $e");
+      // Optionally, show an error dialog to the user
+    }
+  }
+
 
   Future<void> _getLocation() async {
     final location = await LocationService().getCurrentLocation();
@@ -76,10 +93,9 @@ class _NoteDialogState extends State<NoteDialog> {
           ),
           Expanded(
             child: _imageFile != null
-                ? Image.network(
-                    _imageFile!.path,
-                    fit: BoxFit.cover,
-                  )
+                ? (kIsWeb
+                    ? Image.network(_imageFile!.path)
+                    : Image.file(File(_imageFile!.path)))
                 : (widget.note?.imageUrl != null &&
                         Uri.parse(widget.note!.imageUrl!).isAbsolute
                     ? Image.network(
@@ -88,9 +104,18 @@ class _NoteDialogState extends State<NoteDialog> {
                       )
                     : Container()),
           ),
-          TextButton(
-            onPressed: _pickImage,
-            child: const Text("Pick Image"),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              IconButton(
+                icon: Icon(Icons.photo),
+                onPressed: _pickImage,
+              ),
+              IconButton(
+                icon: Icon(Icons.camera),
+                onPressed: _takePicture,
+              ),
+            ],
           ),
           TextButton(
             onPressed: _getLocation,
@@ -131,10 +156,9 @@ class _NoteDialogState extends State<NoteDialog> {
               lat: widget.note?.lat.toString() != _position!.latitude.toString()
                   ? _position!.latitude.toString()
                   : widget.note?.lat.toString(),
-              lng:
-                  widget.note?.lng.toString() != _position!.longitude.toString()
-                      ? _position!.longitude.toString()
-                      : widget.note?.lng.toString(),
+              lng: widget.note?.lng.toString() != _position!.longitude.toString()
+                  ? _position!.longitude.toString()
+                  : widget.note?.lng.toString(),
               createdAt: widget.note?.createdAt,
             );
 
