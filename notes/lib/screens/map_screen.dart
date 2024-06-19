@@ -18,7 +18,7 @@ class _MapScreenState extends State<MapScreen> {
       options: MapOptions(
         initialCenter: LatLng(
           double.parse(widget.lat.toString()),
-          double.parse(widget.lng.toString()),
+          double.parse(widget.lat.toString()),
         ),
         initialZoom: 9.2,
       ),
@@ -27,28 +27,22 @@ class _MapScreenState extends State<MapScreen> {
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: 'com.example.notes',
         ),
-        MarkerLayer(markers: [
-          Marker(
-            point: LatLng(
-              double.parse(widget.lat.toString()),
-              double.parse(widget.lng.toString()),
+        MarkerLayer(
+          markers: [
+            Marker(
+              point: LatLng(
+                double.parse(widget.lat.toString()),
+                double.parse(widget.lat.toString()),
+              ),
+              child: const Icon(
+                Icons.location_city,
+                color: Colors.red,
+                size: 32,
+              ),
             ),
-            child: const Icon(
-              Icons.location_city,
-              color: Colors.red,
-              size: 32,
-            ),
-          ),
-        ]),
-        // RichAttributionWidget(
-        //   attributions: [
-        //     TextSourceAttribution(
-        //       'OpenStreetMap contributors',
-        //       onTap: () =>
-        //           launchUrl(Uri.parse('https://openstreetmap.org/copyright')),
-        //     ),
-        //   ],
-        // ),
+          ],
+        ),
+        
       ],
     );
   }
