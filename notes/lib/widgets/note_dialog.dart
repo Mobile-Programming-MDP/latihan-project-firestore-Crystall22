@@ -125,89 +125,91 @@ class _NoteDialogState extends State<NoteDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.note == null ? 'Add Notes' : 'Update Notes'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Title: ', textAlign: TextAlign.start),
-          TextField(
-            controller: _titleController,
+    return SingleChildScrollView(
+      child: AlertDialog(
+        title: Text(widget.note == null ? 'Add Notes' : 'Update Notes'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Title: ', textAlign: TextAlign.start),
+            TextField(
+              controller: _titleController,
+            ),
+            const Padding(
+              padding: EdgeInsets.only(top: 20),
+              child: Text('Description: '),
+            ),
+            TextField(
+              controller: _descriptionController,
+            ),
+            const Padding(
+              padding: EdgeInsets.only(top: 20),
+              child: Text('Image: '),
+            ),
+            _isUploading
+                ? const Center(child: CircularProgressIndicator())
+                : _imageUrl != null
+                    ? Image.network(_imageUrl!, fit: BoxFit.cover)
+                    : Container(),
+            TextButton(
+              onPressed: () => _showImageSourceActionSheet(context),
+              child: const Text('Pick Image: '),
+            ),
+            TextButton(
+              onPressed: _getLocation,
+              child: const Text('Get Location: '),
+            ),
+            Text(
+              _position?.latitude != null && _position?.longitude != null
+                  ? "Current Location: ${_position!.latitude}, ${_position!.longitude}"
+                  : "Current Location: ${widget.note?.lat}, ${widget.note?.lng}",
+              textAlign: TextAlign.start,
+            ),
+          ],
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
           ),
-          const Padding(
-            padding: EdgeInsets.only(top: 20),
-            child: Text('Description: '),
-          ),
-          TextField(
-            controller: _descriptionController,
-          ),
-          const Padding(
-            padding: EdgeInsets.only(top: 20),
-            child: Text('Image: '),
-          ),
-          _isUploading
-              ? const Center(child: CircularProgressIndicator())
-              : _imageUrl != null
-                  ? Image.network(_imageUrl!, fit: BoxFit.cover)
-                  : Container(),
-          TextButton(
-            onPressed: () => _showImageSourceActionSheet(context),
-            child: const Text('Pick Image: '),
-          ),
-          TextButton(
-            onPressed: _getLocation,
-            child: const Text('Get Location: '),
-          ),
-          Text(
-            _position?.latitude != null && _position?.longitude != null
-                ? "Current Location: ${_position!.latitude}, ${_position!.longitude}"
-                : "Current Location: ${widget.note?.lat}, ${widget.note?.lng}",
-            textAlign: TextAlign.start,
+          ElevatedButton(
+            onPressed: () async {
+              // Get the image URL from the uploaded image
+              String? imageUrl = _imageUrl ?? widget.note?.imageUrl;
+      
+              // Get the current location if no location is available
+              String latitude = _position?.latitude.toString() ?? widget.note?.lat.toString() ?? "";
+              String longitude = _position?.longitude.toString() ?? widget.note?.lng.toString() ?? "";
+      
+              // Create a Note object based on the current state
+              Note note = Note(
+                id: widget.note?.id,
+                title: _titleController.text,
+                description: _descriptionController.text,
+                imageUrl: imageUrl, // imageUrl can be null if no image is selected
+                lat: latitude,
+                lng: longitude,
+                createdAt: widget.note?.createdAt,
+              );
+      
+              if (widget.note == null) {
+                await NoteService.addNote(note);
+                Navigator.of(context).pop();
+              } else {
+                await NoteService.updateNote(note);
+                Navigator.of(context).pop();
+              }
+            },
+            child: Text(widget.note == null ? 'Add' : 'Update'),
           ),
         ],
       ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('Cancel'),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            // Get the image URL from the uploaded image
-            String? imageUrl = _imageUrl ?? widget.note?.imageUrl;
-
-            // Get the current location if no location is available
-            String latitude = _position?.latitude.toString() ?? widget.note?.lat.toString() ?? "";
-            String longitude = _position?.longitude.toString() ?? widget.note?.lng.toString() ?? "";
-
-            // Create a Note object based on the current state
-            Note note = Note(
-              id: widget.note?.id,
-              title: _titleController.text,
-              description: _descriptionController.text,
-              imageUrl: imageUrl, // imageUrl can be null if no image is selected
-              lat: latitude,
-              lng: longitude,
-              createdAt: widget.note?.createdAt,
-            );
-
-            if (widget.note == null) {
-              await NoteService.addNote(note);
-              Navigator.of(context).pop();
-            } else {
-              await NoteService.updateNote(note);
-              Navigator.of(context).pop();
-            }
-          },
-          child: Text(widget.note == null ? 'Add' : 'Update'),
-        ),
-      ],
     );
   }
 }
