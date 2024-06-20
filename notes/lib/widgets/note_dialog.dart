@@ -179,4 +179,3 @@ class _NoteDialogState extends State<NoteDialog> {
       ],
     );
   }
-}
