@@ -1,5 +1,6 @@
-import 'dart:io' as io;
-
+import 'dart:html' as html;  // Import for web-specific code
+import 'dart:js' as js;      // Import for JavaScript interop
+import 'package:flutter/foundation.dart';  // For kIsWeb check
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
@@ -42,14 +43,45 @@ class _NoteDialogState extends State<NoteDialog> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    final pickedFile = await ImagePicker().pickImage(source: source);
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = pickedFile;
-        _isUploading = true; // Show loading indicator
-      });
-      await _uploadImage(pickedFile);
+    if (kIsWeb && source == ImageSource.camera) {
+      // For web, we need to use HTML5 API to open the camera
+      await _pickImageFromCameraWeb();
+    } else {
+      final pickedFile = await ImagePicker().pickImage(source: source);
+      if (pickedFile != null) {
+        setState(() {
+          _imageFile = pickedFile;
+          _isUploading = true; // Show loading indicator
+        });
+        await _uploadImage(pickedFile);
+      }
     }
+  }
+
+  Future<void> _pickImageFromCameraWeb() async {
+    final picker = html.FileUploadInputElement()
+      ..accept = 'image/*';
+    
+    // Set the capture attribute using JavaScript
+    js.context.callMethod('setAttribute', [picker, 'capture', 'environment']);
+    
+    picker.click();
+    picker.onChange.listen((event) {
+      final files = picker.files;
+      if (files != null && files.isNotEmpty) {
+        final file = files.first;
+        final reader = html.FileReader();
+        reader.readAsArrayBuffer(file);
+        reader.onLoadEnd.listen((e) async {
+          final bytes = reader.result as List<int>;
+          setState(() {
+            _imageFile = XFile(file.name, bytes: Uint8List.fromList(bytes));
+            _isUploading = true; // Show loading indicator
+          });
+          await _uploadImage(_imageFile!);
+        });
+      }
+    });
   }
 
   Future<void> _uploadImage(XFile imageFile) async {
@@ -58,6 +90,7 @@ class _NoteDialogState extends State<NoteDialog> {
       _imageUrl = imageUrl;
       _isUploading = false; // Hide loading indicator
     });
+    print('Uploaded Image URL: $_imageUrl'); // Debugging line
   }
 
   void _showImageSourceActionSheet(BuildContext context) {
@@ -165,13 +198,11 @@ class _NoteDialogState extends State<NoteDialog> {
             );
 
             if (widget.note == null) {
-              NoteService.addNote(note).whenComplete(() {
-                Navigator.of(context).pop();
-              });
+              await NoteService.addNote(note);
+              Navigator.of(context).pop();
             } else {
-              NoteService.updateNote(note).whenComplete(() {
-                Navigator.of(context).pop();
-              });
+              await NoteService.updateNote(note);
+              Navigator.of(context).pop();
             }
           },
           child: Text(widget.note == null ? 'Add' : 'Update'),
@@ -179,3 +210,4 @@ class _NoteDialogState extends State<NoteDialog> {
       ],
     );
   }
+}
